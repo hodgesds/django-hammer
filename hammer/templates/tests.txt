@@ -1,0 +1,150 @@
+import unittest
+from django.test import TestCase, Client
+from django.test import RequestFactory
+import doctest
+from django.core.urlresolvers import reverse, reverse_lazy
+from {{app}} import models
+from {{app}}.models import (
+    {% for app_model in app_models %}
+    {{app_model}},
+    {% endfor %}
+)
+from {{app}}.views import (
+    {% for app_model in app_models %}
+    {{app_model|title}}ListView,
+    {{app_model|title}}DetailView,
+    {{app_model|title}}CreateView,
+    {{app_model|title}}UpdateView,
+    {{app_model|title}}DeleteView,
+    {% endfor %}
+)
+
+
+{% for app_model in app_models %}
+{% comment %}
+    This section sets up all the unit tests for the CRUD views
+{% endcomment %}
+class {{app_model|title}}ListViewTest(TestCase):
+    multi_db = True
+    def setUp(self):
+        self.client = Client()
+
+    def tearDown(self):
+        pass
+
+    def test_get(self):
+        request = RequestFactory().get(reverse_lazy("{{app_model|lower}}_list"))
+        view = {{app_model|title}}ListView.as_view(template_name='{{app_model|lower}}_list.html')
+        response = view(request)
+        self.assertEqual(response.status_code, 200)
+        json_request = RequestFactory().get(reverse_lazy("{{app_model|lower}}_list") + "?format=json")
+        json_response = view(json_request)
+        self.assertEqual(json_response.status_code, 200)
+        xml_request = RequestFactory().get(reverse_lazy("{{app_model|lower}}_list") + "?format=xml")
+        xml_response = view(xml_request)
+        self.assertEqual(xml_response.status_code, 200)
+
+    def test_post(self):
+        request = RequestFactory().post(reverse_lazy("{{app_model|lower}}_list"))
+        view = {{app_model|title}}ListView.as_view(template_name='{{app_model|lower}}_list.html')
+        response = view(request)
+        self.assertEqual(response.status_code, 405)
+
+
+class {{app_model|title}}DetailViewTest(TestCase):
+    multi_db = True
+    def setUp(self):
+        self.client = Client()
+
+    def test_get(self):
+        request = RequestFactory().get(reverse_lazy("{{app_model|lower}}_detail", kwargs={'pk':1}))
+        view = {{app_model|title}}DetailView.as_view(template_name='{{app_model|lower}}_detail.html')
+        response = view(request, pk=1)
+        self.assertEqual(response.status_code, 200)
+
+    def test_post(self):
+        request = RequestFactory().post(reverse_lazy("{{app_model|lower}}_detail", kwargs={'pk':1}))
+        view = {{app_model|title}}DetailView.as_view(template_name='{{app_model|lower}}_detail.html')
+        response = view(request, pk=1)
+        self.assertEqual(response.status_code, 405)
+
+
+class {{app_model|title}}CreateViewTest(TestCase):
+    multi_db = True
+    def setUp(self):
+        self.client = Client()
+
+    def test_get(self):
+        request = RequestFactory().get(reverse_lazy("{{app_model|lower}}_create"))
+        view = {{app_model|title}}CreateView.as_view(template_name='{{app_model|lower}}_create.html')
+        response = view(request)
+        self.assertEqual(response.status_code, 200)
+
+    def test_post(self):
+        request = RequestFactory().post(reverse_lazy("{{app_model|lower}}_create"))
+        view = {{app_model|title}}CreateView.as_view(template_name='{{app_model|lower}}_create.html')
+        response = view(request)
+        self.assertEqual(response.status_code, 200)
+
+
+class {{app_model|title}}UpdateViewTest(TestCase):
+    multi_db = True
+    def setUp(self):
+        self.client = Client()
+
+    def test_get(self):
+        request = RequestFactory().get(reverse_lazy("{{app_model|lower}}_update", kwargs={'pk':1}))
+        view = {{app_model|title}}UpdateView.as_view(template_name='{{app_model|lower}}_update.html')
+        response = view(request, pk=1)
+        self.assertEqual(response.status_code, 200)
+        json_request = RequestFactory().get(reverse_lazy("{{app_model|lower}}_update", kwargs={'pk':1}) + "?format=json")
+        json_response = view(request, pk=1)
+        self.assertEqual(json_response.status_code, 200)
+        xml_request = RequestFactory().get(reverse_lazy("{{app_model|lower}}_update", kwargs={'pk':1}) + "?format=xml")
+        xml_response = view(xml_request, pk=1)
+        self.assertEqual(xml_request.status_code, 200)
+
+    def test_post(self):
+        request = RequestFactory().post(reverse_lazy("{{app_model|lower}}_update", kwargs={'pk':1}))
+        view = {{app_model|title}}UpdateView.as_view(template_name='{{app_model|lower}}_update.html')
+        response = view(request, pk=1)
+        self.assertEqual(response.status_code, 200)
+
+
+class {{app_model|title}}DeleteViewTest(TestCase):
+    multi_db = True
+    def setUp(self):
+        self.client = Client()
+
+    def test_get(self):
+        request = RequestFactory().get(reverse_lazy("{{app_model|lower}}_delete", kwargs={'pk':1}))
+        view = {{app_model|title}}DeleteView.as_view(template_name='{{app_model|lower}}_delete.html')
+        response = view(request, pk=1)
+        self.assertEqual(response.status_code, 200)
+
+    def test_post(self):
+        request = RequestFactory().post(reverse_lazy("{{app_model|lower}}_delete", kwargs={'pk':1}))
+        view = {{app_model|title}}DeleteView.as_view(template_name='{{app_model|lower}}_delete.html')
+        response = view(request, pk=1)
+        self.assertEqual(response.status_code, 200)
+
+{% endfor %}
+
+{% for model in model_data %}
+class {{model.1}}Test(TestCase):
+    multi_db = True
+    def setUp(self):
+        self.object = {{model.1}}.objects.create({{model.0|safe}})
+
+    def test_unicode(self):
+        self.assertEqual(self.object.__unicode__() == str(self.object.pk))
+
+    def tearDown(self):
+        self.object.delete()
+{% endfor %}
+
+
+# to enable doctests
+#def load_tests(loader, tests, ignore):
+#    tests.addTests(doctest.DocTestSuite(models))
+#    return tests

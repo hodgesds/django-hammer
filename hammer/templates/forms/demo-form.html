@@ -1,0 +1,11 @@
+<form method="post" action="{% url "demo" %}">
+    <p>MySQL:</p>
+    <code>mysqldump -d -u someuser -p mydatabase > mydatabase.sql</code>
+    <p>Postgres:</p>
+    <code>pg_dump -s mydatabase > mydatabase.sql</code>
+    <br>
+    {% csrf_token %}
+    {{ form }}
+    <br>
+    <input type="submit" class="btn btn-primary" value="Submit">
+</form>

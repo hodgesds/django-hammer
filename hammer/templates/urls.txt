@@ -1,0 +1,21 @@
+from django.conf.urls import patterns, include, url
+from {{app}}.views import (
+    {% for app_model in app_models %}
+    {{app_model|title}}ListView,
+    {{app_model|title}}DetailView,
+    {{app_model|title}}CreateView,
+    {{app_model|title}}UpdateView,
+    {{app_model|title}}DeleteView,
+    {% endfor %}
+)
+
+urlpatterns = patterns(
+    '',
+{% for app_model in app_models %}
+    url(r'^{{app_model|lower}}/$', {{app_model|title}}ListView.as_view(), name="{{app_model|lower}}_list"),
+    url(r'^{{app_model|lower}}/(?P<pk>\d+)$', {{app_model|title}}DetailView.as_view(), name="{{app_model|lower}}_detail"),
+    url(r'^{{app_model|lower}}/create/$', {{app_model|title}}CreateView.as_view(), name="{{app_model|lower}}_create"),
+    url(r'^{{app_model|lower}}/update/(?P<pk>\d+)$', {{app_model|title}}UpdateView.as_view(), name="{{app_model|lower}}_update"),
+    url(r'^{{app_model|lower}}/delete/(?P<pk>\d+)$', {{app_model|title}}DeleteView.as_view(), name="{{app_model|lower}}_delete"),
+{% endfor %}
+)

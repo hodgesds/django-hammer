@@ -1,0 +1,69 @@
+from django.views.generic.list import ListView
+from django.views.generic.detail import DetailView
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.http import HttpResponseRedirect, Http404
+from django.core.urlresolvers import reverse, reverse_lazy
+from hammer.mixins import AJAXResponseMixin
+from {{app}}.models import (
+    {% for app_model in app_models %}
+    {{app_model}},
+    {% endfor %}
+)
+
+{% for app_model in app_models %}
+class {{app_model|title}}ListView(ListView, AJAXResponseMixin):
+    model = {{app_model}}
+    template_name = '{{app_model|lower}}_list.html'
+
+    def get(self, request, *args, **kwargs):
+        self.object_list = self.get_queryset()
+        context = self.get_context_data(object_list = self.object_list)
+        allow_empty = self.get_allow_empty()
+        if not allow_empty and len(self.object_list) == 0:
+            raise Http404(_(u"Empty list and '%(class_name)s.allow_empty' is False.")
+                          % {'class_name': self.__class__.__name__})
+        res_format = request.GET.get('format')
+        if res_format and res_format.lower() in 'json':
+            return self.render_obj_to_json(context)
+        if res_format and res_format.lower() in 'xml':
+            return self.render_obj_to_xml(context)
+        return self.render_to_response(context)
+
+
+class {{app_model|title}}CreateView(CreateView):
+    model = {{app_model}}
+    success_url = reverse_lazy('{{app_model|lower}}_list')
+    template_name = '{{app_model|lower}}_create.html'
+
+
+class {{app_model|title}}DetailView(DetailView, AJAXResponseMixin):
+    model = {{app_model}}
+    template_name = '{{app_model|lower}}_detail.html'
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        context = self.get_context_data(object=self.object)
+        res_format = request.GET.get('format')
+        if res_format and 'json' in res_format.lower():
+            return self.render_obj_to_json(context)
+        if res_format and 'xml' in res_format.lower():
+            return self.render_obj_to_xml(context)
+        return self.render_to_response(context)
+
+
+class {{app_model|title}}UpdateView(UpdateView):
+    model = {{app_model}}
+    success_url = reverse_lazy('{{app_model|lower}}_list')
+    template_name = '{{app_model|lower}}_update.html'
+
+    def form_valid(self, form):
+        self.object = form.save()
+        return HttpResponseRedirect(self.success_url)
+
+
+class {{app_model|title}}DeleteView(DeleteView):
+    model = {{app_model}}
+    success_url = reverse_lazy('{{app_model|lower}}_list')
+    template_name = '{{app_model|lower}}_confirm_delete.html'
+
+{% endfor %}
